@@ -1,0 +1,34 @@
+name: default
+generic:
+  seed: 42
+  log_dir: "./train/log/"
+  clear_log: True
+data:
+  data_dir: './data/download/files/'
+  csv_out: './train/data.csv'
+  remake_csv: True
+  batch_size: 2
+  shuffle: True
+  img_height: 128
+  dataset_split: [.8, .1, .1]  # train, val, test
+  vocab_path: './data/download/vocab.txt'
+  max_chord_stack: 10
+training:
+  epochs: 500000
+  save: False
+  save_every: 1
+  save_dir: "./saved_models/"
+  decode: True
+  decode_every: 1
+encoder:
+  layers: [2, 2, 2, 2]
+  no_lstm_layers: 2
+  lr: 1e-4
+decoder:
+  d_model: 512
+  n_head: 8
+  max_len: 400  # TODO check
+  ffn_hidden: 1024
+  n_layers: 2
+  drop_prob: 0.1
+  lr: 1e-4

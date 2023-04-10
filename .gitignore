@@ -1,0 +1,5 @@
+*.pyc
+train/data.csv
+train/log
+data/download/files
+data/download/vocab.txt
