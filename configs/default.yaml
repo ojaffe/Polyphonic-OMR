@@ -6,8 +6,10 @@ generic:
 data:
   data_dir: './data/download/files/'
   csv_out: './train/data.csv'
-  remake_csv: True
-  batch_size: 2
+  hard_csv_out: './train/data_hard.csv'
+  remake_csv: False
+  gen_hard_dataset: True
+  batch_size: 32
   shuffle: True
   img_height: 128
   dataset_split: [.8, .1, .1]  # train, val, test

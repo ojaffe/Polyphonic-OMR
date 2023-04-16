@@ -2,6 +2,7 @@ import sys
 import os
 import argparse
 from musicxml import MusicXML
+from tqdm import tqdm
 
 if __name__ == '__main__':
 
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     file_num = 0
 
     # Go through all inputs generating output sequences
-    for i, file_name in enumerate(os.listdir(args.input)):
+    for i, file_name in tqdm(enumerate(os.listdir(args.input))):
 
         # Ignore non .musicxml files
         if not file_name.endswith('.musicxml'):
@@ -54,7 +55,8 @@ if __name__ == '__main__':
                     for n in notes:
                         if 'note' in n:
                             n_sub = n.replace('.', '')
-                            n_pitch, n_rhythm = n_sub.split("_")
+                            n_pitch = n_sub.split("_")[0]
+                            n_rhythm = "_".join(n_sub.split("_")[1:])
 
                             if n_pitch not in tokens:
                                 tokens.append(n_pitch)
