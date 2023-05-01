@@ -65,10 +65,7 @@ class PadCollate:
         imgs = torch.stack(list(imgs), dim=0)
         tgt = pad_sequence(tgt, batch_first=True, padding_value=self.PAD_IDX)
 
-         # Construct padding mask
-        tgt_pad_mask = tgt.ne(self.PAD_IDX)
-
-        return imgs, tgt, tgt_pad_mask
+        return imgs, tgt
 
 
 def create_tokenizer(data_cfg):
@@ -80,7 +77,7 @@ def create_tokenizer(data_cfg):
     idx2note = {0: "<SOS>", 1: "<EOS>", 2: "<PAD>", 3: "<DOT>", 4: "<CHORD START>", 5: "<CHORD END>"}
     initial_len = len(note2idx)
 
-    with open(data_cfg.get("vocab_path", None), 'r') as f:
+    with open(data_cfg.get("vocab_path"), 'r') as f:
         words = f.read().split('\n')
 
     for i, word in enumerate(words):
@@ -92,15 +89,15 @@ def create_tokenizer(data_cfg):
     return note2idx, idx2note, vocab_size, SOS_IDX, EOS_IDX, PAD_IDX, DOT_IDX
 
 
-def load_data(data_cfg):
+def load_data(data_cfg, seed):
     note2idx, idx2note, vocab_size, SOS_IDX, EOS_IDX, PAD_IDX, DOT_IDX = create_tokenizer(data_cfg)
 
     batch_size = data_cfg.get("batch_size", 4)
 
     # Create dataset from cleaned data, if doesn't already exist
-    csv_out = data_cfg.get("csv_out", None)
+    csv_out = data_cfg.get("csv_out")
     if not os.path.isfile(csv_out) or data_cfg.get("remake_csv", False):
-        make_csv(data_cfg)
+        make_csv(data_cfg, seed)
 
     dataset = PolyphonicDataset(data_cfg, note2idx, idx2note, vocab_size)
 

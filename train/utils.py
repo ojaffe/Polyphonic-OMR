@@ -61,16 +61,14 @@ def greedy_decode(encoder, decoder, data_loader, PAD_IDX, SOS_IDX, EOS_IDX, devi
 
     # Get example
     batch = next(iter(data_loader))
-    image, tgt, _ = batch
+    image, tgt = batch
     
     image, tgt = image[0].unsqueeze(0).to(device), tgt[0].unsqueeze(0).to(device)
 
     with torch.no_grad():
+        im_emb = encoder(image)
         for i in tqdm(range(200)):
-            tgt_pad_mask = torch.ones((1, tgt_input.shape[1]), dtype=torch.int64).to(device)
-
-            im_emb = encoder(image)
-            output = decoder(im_emb, tgt_input, tgt_pad_mask)
+            output = decoder(im_emb, tgt_input, None, None)
 
             final_out = output[:, output.shape[1]-1, :]
             top_token = torch.argmax(final_out).item()
@@ -82,4 +80,31 @@ def greedy_decode(encoder, decoder, data_loader, PAD_IDX, SOS_IDX, EOS_IDX, devi
             if top_token == EOS_IDX:
                 break
 
-    return tgt_input.detach().tolist()[0]
+    return tgt[0].tolist(), tgt_input.detach().tolist()[0]
+
+
+def build_pad_mask(inputs, pad_idx):
+    pad_mask = (inputs == pad_idx).bool()
+
+    return pad_mask
+
+
+def build_causal_mask(inputs, num_heads):
+    batch_size, sequence_length = inputs.size()
+
+    causal_mask = torch.tril(torch.ones((sequence_length, sequence_length), dtype=torch.bool, device=inputs.device))
+    causal_mask = (causal_mask == 0)
+    causal_mask = causal_mask.repeat(batch_size * num_heads, 1, 1).bool()
+    return causal_mask
+
+
+def calc_acc(input, target):
+    """
+    :param input: [B, T, V]
+    :param target: [B, T]
+    """
+    input = input.softmax(-1)
+    categorical_input = input.argmax(-1)
+
+    bool_acc = categorical_input.long() == target.long()
+    return bool_acc.sum().to(torch.float) / bool_acc.numel()

@@ -1,23 +1,24 @@
-name: default
+name: random-fixed-lstm2-tflayer2-emb256-ffn128-dropout.1-8heads
 generic:
   seed: 42
-  log_dir: "./train/log/"
-  clear_log: True
+  log_dir: "log"
+  clear_log: False
 data:
   data_dir: './data/download/files/'
   csv_out: './train/data.csv'
   hard_csv_out: './train/data_hard.csv'
   remake_csv: False
-  gen_hard_dataset: True
-  batch_size: 32
+  gen_hard_dataset: False
+  batch_size: 16
   shuffle: True
   img_height: 128
   dataset_split: [.8, .1, .1]  # train, val, test
   vocab_path: './data/download/vocab.txt'
   max_chord_stack: 10
+  max_seq_len: 2048
 training:
   epochs: 500000
-  save: False
+  save: True
   save_every: 1
   save_dir: "./saved_models/"
   decode: True
@@ -27,10 +28,10 @@ encoder:
   no_lstm_layers: 2
   lr: 1e-4
 decoder:
-  d_model: 512
+  d_model: 256
   n_head: 8
   max_len: 400  # TODO check
-  ffn_hidden: 1024
+  ffn_hidden: 128
   n_layers: 2
   drop_prob: 0.1
   lr: 1e-4

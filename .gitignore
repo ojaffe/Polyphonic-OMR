@@ -1,6 +1,6 @@
 *.pyc
 *.csv
-train/log
+log
 data/download/files
 data/download/vocab.txt
 saved_models

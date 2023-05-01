@@ -57,7 +57,7 @@ def strip_series(input: str, max_chord_stack: int) -> (list, list):
     return output, density
 
 
-def make_csv(data_cfg: dict) -> None:
+def make_csv(data_cfg: dict, seed) -> None:
     """
     Given an input directory and output path, for each .png and .semantic pair
     within the directory, write a row in an output csv of the .png path, and
@@ -88,22 +88,26 @@ def make_csv(data_cfg: dict) -> None:
             contents = f_sem.read()
 
         tokens, density = strip_series(contents, max_chord_stack)
-        all_densities.append(density)
+        
+        if len(tokens) + 2 <= data_cfg.get("max_seq_len"):  # +2 for SOS, EOS
+            data["img_path"].append(img_path)
+            data["tokens"].append(tokens)
 
-        data["img_path"].append(img_path)
-        data["tokens"].append(tokens)
+            all_densities.append(density)
 
     all_densities_sorted = list(reversed(np.argsort(all_densities)))
 
     df = pd.DataFrame.from_dict(data)
 
     # Genetate separate "hard" dataset
+    samples = 10000
     if data_cfg["gen_hard_dataset"]:
-        hard_idxs = all_densities_sorted[:1000]
+        hard_idxs = all_densities_sorted[:samples]
         df_easy = df.drop(hard_idxs)
         df_hard = df.loc[hard_idxs]
 
         df_easy.to_csv(csv_out, header=True, index=False)
         df_hard.to_csv(hard_csv_out, header=True, index=False)
     else:
-        df.to_csv(header=True, index=False)
+        df = df.sample(n=samples, random_state=seed)
+        df.to_csv(csv_out, header=True, index=False)

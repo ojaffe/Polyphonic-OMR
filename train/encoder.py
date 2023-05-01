@@ -56,7 +56,7 @@ class Block(nn.Module):
 
 
 class EncoderCRNN(nn.Module):
-    def __init__(self, img_channels, layers, no_lstm_layers):
+    def __init__(self, img_channels, layers, no_lstm_layers, lstm_hidden):
         super(EncoderCRNN, self).__init__()
                 
         # Initial conv layer to increase channels
@@ -83,7 +83,7 @@ class EncoderCRNN(nn.Module):
 
         # Bi-LSTM encoding
         self.bi_lstm = nn.LSTM(input_size=512,
-                               hidden_size=256,
+                               hidden_size=int(lstm_hidden / 2),
                                num_layers=no_lstm_layers,
                                bias=False,
                                batch_first=True,
@@ -138,3 +138,50 @@ class EncoderCRNN(nn.Module):
         x, (h, c) = self.bi_lstm(x)  # (b, 112, 512) -> (b, 112, 1024)
 
         return x
+
+
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        """
+        Arguments:
+            x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
+        """
+        x = x + self.pe[:x.size(0)]
+        return self.dropout(x)
+
+
+class Decoder(nn.Module):
+    def __init__(self, vocab_size, d_model, n_head, max_len,
+                 ffn_hidden, n_layers, drop_prob, device):
+        super(Decoder, self).__init__()
+
+        self.pos_encoder = PositionalEncoding(d_model, dropout=drop_prob)
+        self.encoder = nn.Embedding(vocab_size, d_model)
+
+        decoder_layer = nn.TransformerDecoderLayer(d_model=d_model, nhead=n_head, dim_feedforward=ffn_hidden,
+                                                   dropout=drop_prob, batch_first=True)
+        self.decoder = nn.TransformerDecoder(decoder_layer, num_layers=n_layers)
+        
+        self.lm_head = nn.Linear(d_model, vocab_size)
+        
+    def forward(self, im_emb, tgt_input, tgt_pad_mask, tgt_causal_mask):
+        emb = self.encoder(tgt_input)
+        if not self.train() and tgt_causal_mask is not None:
+            tgt_causal_mask = tgt_causal_mask[0]
+            
+        output = self.decoder(emb, im_emb, tgt_mask=tgt_causal_mask, tgt_key_padding_mask=tgt_pad_mask)
+        output = self.lm_head(output)
+
+        return output
