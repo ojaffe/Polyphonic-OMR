@@ -21,6 +21,8 @@ Then preprocess the files in ./data/clean/ with the following commands:
 5. Run genlabels.py to generate labels for the MusicXML files
 6. Run clean.py with appropriate arguments to clean the data, as needed
 
+A dataset of 177k examples from the end of step 4 is available [here](https://drive.google.com/file/d/1dO81DS4cvIMuDXYgIha407P6zhlg4W67/view?usp=sharing).
+
 Credits to [the following repository](https://github.com/sachindae/polyphonic-omr), which was a result from the paper: `"An Empirical Evaluation of End-to-End Polyphonic Optical Music Recognition"`
 
 ## Training
