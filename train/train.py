@@ -34,14 +34,6 @@ def train(cfg_file):
                           layers=cfg["encoder"].get("layers"), 
                           no_lstm_layers=cfg["encoder"].get("no_lstm_layers"),
                           lstm_hidden=cfg["decoder"].get("d_model")).to(device)
-    """decoder = Transformer(vocab_size=vocab_size, 
-                          d_model=cfg["decoder"].get("d_model"), 
-                          n_head=cfg["decoder"].get("n_head"), 
-                          max_len=cfg["data"].get("max_seq_len"),
-                          ffn_hidden=cfg["decoder"].get("ffn_hidden"), 
-                          n_layers=cfg["decoder"].get("n_layers"), 
-                          drop_prob=cfg["decoder"].get("drop_prob"), 
-                          device=device).to(device)"""
     decoder = Decoder(vocab_size=vocab_size, 
                           d_model=cfg["decoder"].get("d_model"), 
                           n_head=cfg["decoder"].get("n_head"), 
@@ -145,7 +137,8 @@ def train(cfg_file):
             torch.save(encoder.state_dict(), encoder_save_loc)
             torch.save(decoder.state_dict(), decoder_save_loc)
 
-    writer.close()
+    train_writer.close()
+    eval_writer.close()
 
 
 if __name__ == "__main__":
